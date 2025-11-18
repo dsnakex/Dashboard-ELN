@@ -5,6 +5,7 @@ import { useAuth } from '@/lib/hooks/use-auth'
 import { useUIStore } from '@/lib/stores/ui-store'
 import { Header } from '@/components/layout/header'
 import { Sidebar } from '@/components/layout/sidebar'
+import { CommandPalette } from '@/components/search/command-palette'
 import { cn } from '@/lib/utils/cn'
 
 export default function DashboardLayout({
@@ -27,6 +28,7 @@ export default function DashboardLayout({
     <div className="min-h-screen bg-background">
       <Header />
       <Sidebar />
+      <CommandPalette />
       <main
         className={cn(
           'pt-14 transition-all duration-300',

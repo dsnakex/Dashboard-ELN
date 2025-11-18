@@ -15,15 +15,21 @@ import {
   Settings,
   ChevronLeft,
   X,
+  Calendar,
+  FilePlus2,
+  History,
 } from 'lucide-react'
 
 const navigation = [
   { name: 'Dashboard', href: '/', icon: LayoutDashboard },
   { name: 'Projects', href: '/projects', icon: Folder },
   { name: 'Experiments', href: '/experiments', icon: FlaskConical },
+  { name: 'Timeline', href: '/experiments/timeline', icon: Calendar },
   { name: 'Protocols', href: '/protocols', icon: ClipboardList },
+  { name: 'Templates', href: '/templates', icon: FilePlus2 },
   { name: 'Inventory', href: '/inventory', icon: Box },
   { name: 'Files', href: '/files', icon: FileText },
+  { name: 'Activity', href: '/activity', icon: History },
   { name: 'Settings', href: '/settings', icon: Settings },
 ]
 

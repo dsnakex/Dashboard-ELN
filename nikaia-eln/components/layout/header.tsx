@@ -3,10 +3,10 @@
 import { useAuth } from '@/lib/hooks/use-auth'
 import { useUIStore } from '@/lib/stores/ui-store'
 import { Button } from '@/components/ui/button'
+import { NotificationDropdown } from '@/components/notifications/notification-dropdown'
 import {
   FlaskConical,
   Menu,
-  Bell,
   Search,
   LogOut,
   User,
@@ -43,7 +43,7 @@ export function Header() {
             variant="outline"
             className="w-full justify-start text-muted-foreground"
             onClick={() => {
-              // TODO: Open command palette
+              document.dispatchEvent(new KeyboardEvent('keydown', { key: 'k', metaKey: true }))
             }}
           >
             <Search className="mr-2 h-4 w-4" />
@@ -57,12 +57,7 @@ export function Header() {
         {/* Right side */}
         <div className="flex items-center gap-2">
           {/* Notifications */}
-          <Button variant="ghost" size="icon" className="relative">
-            <Bell className="h-5 w-5" />
-            <span className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-primary text-[10px] font-medium text-primary-foreground flex items-center justify-center">
-              3
-            </span>
-          </Button>
+          <NotificationDropdown />
 
           {/* User menu */}
           <div className="flex items-center gap-2">
