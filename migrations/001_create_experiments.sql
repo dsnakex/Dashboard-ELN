@@ -97,50 +97,14 @@ CREATE INDEX IF NOT EXISTS idx_comments_experiment ON comments(experiment_id);
 -- =============================================================================
 -- ROW LEVEL SECURITY (RLS) Policies
 -- =============================================================================
+-- Note: Permissions are managed at the application level (Python)
+-- RLS is simplified to allow all operations through the service role
+
 ALTER TABLE experiments ENABLE ROW LEVEL SECURITY;
 
--- Policy: Everyone can view experiments
-CREATE POLICY experiments_select_policy ON experiments
-FOR SELECT USING (true);
-
--- Policy: Managers and Contributors can insert
-CREATE POLICY experiments_insert_policy ON experiments
-FOR INSERT WITH CHECK (
-  EXISTS (
-    SELECT 1 FROM users
-    WHERE id = auth.uid()
-    AND role IN ('manager', 'contributor')
-  )
-);
-
--- Policy: Managers can update any, Contributors can update their own
-CREATE POLICY experiments_update_policy ON experiments
-FOR UPDATE USING (
-  EXISTS (
-    SELECT 1 FROM users
-    WHERE id = auth.uid()
-    AND (
-      role = 'manager'
-      OR (role = 'contributor' AND (
-        experiments.responsible_user_id = auth.uid()
-        OR experiments.created_by = auth.uid()
-      ))
-    )
-  )
-);
-
--- Policy: Managers can delete any, Contributors can delete their own
-CREATE POLICY experiments_delete_policy ON experiments
-FOR DELETE USING (
-  EXISTS (
-    SELECT 1 FROM users
-    WHERE id = auth.uid()
-    AND (
-      role = 'manager'
-      OR (role = 'contributor' AND experiments.created_by = auth.uid())
-    )
-  )
-);
+-- Policy: Allow all operations (permissions managed by application)
+CREATE POLICY experiments_all_policy ON experiments
+FOR ALL USING (true) WITH CHECK (true);
 
 -- =============================================================================
 -- COMMENTS for documentation
