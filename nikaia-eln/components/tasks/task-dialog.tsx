@@ -177,12 +177,15 @@ export function TaskDialog({ open, onClose, task }: TaskDialogProps) {
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="project">Project</Label>
-              <Select value={projectId} onValueChange={setProjectId}>
+              <Select
+                value={projectId || 'none'}
+                onValueChange={(value) => setProjectId(value === 'none' ? '' : value)}
+              >
                 <SelectTrigger>
                   <SelectValue placeholder="Select project" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">None</SelectItem>
+                  <SelectItem value="none">None</SelectItem>
                   {projects?.map((project: any) => (
                     <SelectItem key={project.id} value={project.id}>
                       {project.name}
@@ -194,12 +197,15 @@ export function TaskDialog({ open, onClose, task }: TaskDialogProps) {
 
             <div className="space-y-2">
               <Label htmlFor="assignee">Assignee</Label>
-              <Select value={assigneeId} onValueChange={setAssigneeId}>
+              <Select
+                value={assigneeId || 'unassigned'}
+                onValueChange={(value) => setAssigneeId(value === 'unassigned' ? '' : value)}
+              >
                 <SelectTrigger>
                   <SelectValue placeholder="Select assignee" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Unassigned</SelectItem>
+                  <SelectItem value="unassigned">Unassigned</SelectItem>
                   {users?.map((user: any) => (
                     <SelectItem key={user.id} value={user.id}>
                       {user.full_name || user.email}
