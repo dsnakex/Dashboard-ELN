@@ -80,15 +80,18 @@ EXECUTE FUNCTION update_experiments_updated_at();
 -- =============================================================================
 -- EXTEND comments table to support experiments
 -- =============================================================================
+-- First, make task_id nullable to support experiment comments
+ALTER TABLE comments ALTER COLUMN task_id DROP NOT NULL;
+
+-- Add experiment_id column
 ALTER TABLE comments ADD COLUMN IF NOT EXISTS experiment_id UUID REFERENCES experiments(id) ON DELETE CASCADE;
 
--- Update constraint for single entity reference
+-- Update constraint for single entity reference (one or the other must be set)
 ALTER TABLE comments DROP CONSTRAINT IF EXISTS comment_single_entity_check;
 ALTER TABLE comments ADD CONSTRAINT comment_single_entity_check
 CHECK (
   (task_id IS NOT NULL AND experiment_id IS NULL) OR
-  (task_id IS NULL AND experiment_id IS NOT NULL) OR
-  (task_id IS NULL AND experiment_id IS NULL)
+  (task_id IS NULL AND experiment_id IS NOT NULL)
 );
 
 -- Index for experiment comments
