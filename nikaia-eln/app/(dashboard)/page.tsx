@@ -6,12 +6,14 @@ import {
   ClipboardList,
   AlertTriangle,
   CheckCircle2,
-  Wrench,
 } from 'lucide-react'
 import { KpiCard } from '@/components/dashboard/kpi-card'
 import { RecentExperiments } from '@/components/dashboard/recent-experiments'
 import { ActivityFeed } from '@/components/dashboard/activity-feed'
 import { StatsChart } from '@/components/dashboard/stats-chart'
+import { StatusPieChart } from '@/components/dashboard/status-pie-chart'
+import { ProjectsChart } from '@/components/dashboard/projects-chart'
+import { ActivityChart } from '@/components/dashboard/activity-chart'
 import { useKpis } from '@/lib/hooks/use-dashboard'
 
 export default function DashboardPage() {
@@ -79,8 +81,17 @@ export default function DashboardPage() {
         />
       </div>
 
-      {/* Chart */}
-      <StatsChart />
+      {/* Charts Row 1 */}
+      <div className="grid gap-4 md:grid-cols-2">
+        <StatsChart />
+        <StatusPieChart />
+      </div>
+
+      {/* Charts Row 2 */}
+      <div className="grid gap-4 md:grid-cols-2">
+        <ProjectsChart />
+        <ActivityChart />
+      </div>
 
       {/* Recent Activity */}
       <div className="grid gap-4 md:grid-cols-2">

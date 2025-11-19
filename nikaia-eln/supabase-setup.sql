@@ -490,6 +490,114 @@ ON CONFLICT DO NOTHING;
 SELECT 'Données de test insérées avec succès' AS status;
 
 -- ============================================
+-- SCRIPT ADDITIONNEL: NOUVELLES FONCTIONNALITÉS
+-- ============================================
+
+-- Mise à jour table users (ajout colonnes profil)
+ALTER TABLE users ADD COLUMN IF NOT EXISTS full_name VARCHAR(255);
+ALTER TABLE users ADD COLUMN IF NOT EXISTS avatar_url TEXT;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS organization VARCHAR(255);
+
+-- Table comments
+CREATE TABLE IF NOT EXISTS comments (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  entity_type VARCHAR(50) NOT NULL,
+  entity_id UUID NOT NULL,
+  content TEXT NOT NULL,
+  user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+  parent_id UUID REFERENCES comments(id) ON DELETE CASCADE,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_comments_entity ON comments(entity_type, entity_id);
+CREATE INDEX IF NOT EXISTS idx_comments_user ON comments(user_id);
+
+-- Table tasks
+CREATE TABLE IF NOT EXISTS tasks (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  title VARCHAR(255) NOT NULL,
+  description TEXT,
+  status VARCHAR(20) DEFAULT 'todo' CHECK (status IN ('todo', 'in_progress', 'review', 'done')),
+  priority VARCHAR(20) DEFAULT 'medium' CHECK (priority IN ('low', 'medium', 'high')),
+  project_id UUID REFERENCES projects(id) ON DELETE SET NULL,
+  user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+  assignee_id UUID REFERENCES users(id) ON DELETE SET NULL,
+  due_date DATE,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_tasks_user ON tasks(user_id);
+CREATE INDEX IF NOT EXISTS idx_tasks_assignee ON tasks(assignee_id);
+CREATE INDEX IF NOT EXISTS idx_tasks_project ON tasks(project_id);
+CREATE INDEX IF NOT EXISTS idx_tasks_status ON tasks(status);
+
+-- RLS pour comments
+ALTER TABLE comments ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Users can view comments" ON comments
+  FOR SELECT USING (true);
+
+CREATE POLICY "Users can create comments" ON comments
+  FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Users can update own comments" ON comments
+  FOR UPDATE USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can delete own comments" ON comments
+  FOR DELETE USING (auth.uid() = user_id);
+
+-- RLS pour tasks
+ALTER TABLE tasks ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Users can view all tasks" ON tasks
+  FOR SELECT USING (true);
+
+CREATE POLICY "Users can create tasks" ON tasks
+  FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Users can update own tasks or assigned tasks" ON tasks
+  FOR UPDATE USING (auth.uid() = user_id OR auth.uid() = assignee_id);
+
+CREATE POLICY "Users can delete own tasks" ON tasks
+  FOR DELETE USING (auth.uid() = user_id);
+
+-- Triggers updated_at
+CREATE TRIGGER update_comments_updated_at
+  BEFORE UPDATE ON comments
+  FOR EACH ROW
+  EXECUTE FUNCTION update_updated_at_column();
+
+CREATE TRIGGER update_tasks_updated_at
+  BEFORE UPDATE ON tasks
+  FOR EACH ROW
+  EXECUTE FUNCTION update_updated_at_column();
+
+-- Storage buckets
+INSERT INTO storage.buckets (id, name, public)
+VALUES ('avatars', 'avatars', true)
+ON CONFLICT DO NOTHING;
+
+-- Storage policies pour avatars
+CREATE POLICY "Avatar images are publicly accessible" ON storage.objects
+  FOR SELECT USING (bucket_id = 'avatars');
+
+CREATE POLICY "Users can upload their own avatar" ON storage.objects
+  FOR INSERT WITH CHECK (
+    bucket_id = 'avatars' AND
+    auth.uid()::text = (storage.foldername(name))[1]
+  );
+
+CREATE POLICY "Users can update their own avatar" ON storage.objects
+  FOR UPDATE USING (
+    bucket_id = 'avatars' AND
+    auth.uid()::text = (storage.foldername(name))[1]
+  );
+
+SELECT 'Nouvelles fonctionnalités ajoutées avec succès' AS status;
+
+-- ============================================
 -- VÉRIFICATION FINALE
 -- ============================================
 
@@ -501,4 +609,6 @@ SELECT
   (SELECT COUNT(*) FROM protocols) AS protocols,
   (SELECT COUNT(*) FROM samples) AS samples,
   (SELECT COUNT(*) FROM storage_units) AS storage_units,
-  (SELECT COUNT(*) FROM equipment) AS equipment;
+  (SELECT COUNT(*) FROM equipment) AS equipment,
+  (SELECT COUNT(*) FROM tasks) AS tasks,
+  (SELECT COUNT(*) FROM comments) AS comments;

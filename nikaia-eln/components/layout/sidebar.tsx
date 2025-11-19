@@ -18,17 +18,23 @@ import {
   Calendar,
   FilePlus2,
   History,
+  FileBarChart,
+  BarChart3,
+  CheckSquare,
 } from 'lucide-react'
 
 const navigation = [
   { name: 'Dashboard', href: '/', icon: LayoutDashboard },
   { name: 'Projects', href: '/projects', icon: Folder },
+  { name: 'Tasks', href: '/tasks', icon: CheckSquare },
   { name: 'Experiments', href: '/experiments', icon: FlaskConical },
   { name: 'Timeline', href: '/experiments/timeline', icon: Calendar },
   { name: 'Protocols', href: '/protocols', icon: ClipboardList },
   { name: 'Templates', href: '/templates', icon: FilePlus2 },
   { name: 'Inventory', href: '/inventory', icon: Box },
   { name: 'Files', href: '/files', icon: FileText },
+  { name: 'Reports', href: '/reports', icon: FileBarChart },
+  { name: 'Analytics', href: '/analytics', icon: BarChart3 },
   { name: 'Activity', href: '/activity', icon: History },
   { name: 'Settings', href: '/settings', icon: Settings },
 ]

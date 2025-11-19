@@ -191,3 +191,79 @@ export function useExperimentsByStatus() {
     staleTime: 5 * 60 * 1000, // 5 minutes
   })
 }
+
+// Projects with experiment counts
+export function useProjectsOverview() {
+  return useQuery({
+    queryKey: ['dashboard', 'projects-overview'],
+    queryFn: async () => {
+      const supabase = createClient()
+
+      const { data, error } = await supabase
+        .from('projects')
+        .select(`
+          id,
+          name,
+          status,
+          studies(
+            id,
+            experiments(id)
+          )
+        `)
+        .eq('status', 'active')
+        .limit(10)
+
+      if (error) throw error
+
+      return data?.map((project: any) => ({
+        name: project.name.length > 15 ? project.name.substring(0, 15) + '...' : project.name,
+        experiments: project.studies?.reduce((acc: number, study: any) =>
+          acc + (study.experiments?.length || 0), 0) || 0,
+        studies: project.studies?.length || 0,
+      })) || []
+    },
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  })
+}
+
+// Weekly activity trend
+export function useWeeklyActivity() {
+  return useQuery({
+    queryKey: ['dashboard', 'weekly-activity'],
+    queryFn: async () => {
+      const supabase = createClient()
+
+      // Get last 7 days
+      const days = []
+      for (let i = 6; i >= 0; i--) {
+        const date = new Date()
+        date.setDate(date.getDate() - i)
+        days.push(date.toISOString().split('T')[0])
+      }
+
+      const { data, error } = await supabase
+        .from('activity_log')
+        .select('created_at, action')
+        .gte('created_at', days[0])
+
+      if (error) throw error
+
+      // Group by day
+      const activityByDay: Record<string, number> = {}
+      days.forEach(day => { activityByDay[day] = 0 })
+
+      data?.forEach((activity: any) => {
+        const day = activity.created_at.split('T')[0]
+        if (activityByDay[day] !== undefined) {
+          activityByDay[day]++
+        }
+      })
+
+      return days.map(day => ({
+        day: new Date(day).toLocaleDateString('en-US', { weekday: 'short' }),
+        activities: activityByDay[day] || 0,
+      }))
+    },
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  })
+}

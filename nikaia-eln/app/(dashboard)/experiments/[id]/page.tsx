@@ -16,6 +16,7 @@ import {
   Loader2,
   CheckCircle
 } from 'lucide-react'
+import { CommentsSection } from '@/components/comments/comments-section'
 
 export default function ExperimentDetailPage({
   params
@@ -202,6 +203,9 @@ export default function ExperimentDetailPage({
           </dl>
         </CardContent>
       </Card>
+
+      {/* Comments */}
+      <CommentsSection entityType="experiment" entityId={experiment.id} />
     </div>
   )
 }
