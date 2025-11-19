@@ -15,6 +15,7 @@ from utils.crud import (
     get_all_tasks,
     get_tasks_by_assignee
 )
+from utils.experiments_crud import get_experiment_stats, get_all_experiments
 
 # Page config
 st.set_page_config(
@@ -57,6 +58,8 @@ def show_sidebar():
                 st.switch_page("pages/4_kanban.py")
             if st.button("📅 Timeline", key="nav_timeline", use_container_width=True):
                 st.switch_page("pages/5_timeline.py")
+            if st.button("🧪 Experiments", key="nav_experiments", use_container_width=True):
+                st.switch_page("pages/6_experiments.py")
 
             st.markdown("---")
 
@@ -65,10 +68,10 @@ def show_sidebar():
                 st.rerun()
 
 
-def show_kpi_cards(stats):
+def show_kpi_cards(stats, exp_stats):
     """Display KPI cards."""
 
-    col1, col2, col3, col4 = st.columns(4)
+    col1, col2, col3, col4, col5 = st.columns(5)
 
     with col1:
         st.metric(
@@ -92,6 +95,13 @@ def show_kpi_cards(stats):
         )
 
     with col4:
+        st.metric(
+            label="🧪 Experiments",
+            value=exp_stats.get('total', 0),
+            delta=f"{exp_stats.get('in_progress', 0)} in progress"
+        )
+
+    with col5:
         st.metric(
             label="⚠️ Overdue Tasks",
             value=stats.get('overdue_tasks', 0),
@@ -180,6 +190,57 @@ def show_task_status_chart(tasks):
         x='Status',
         y='Count',
         title='Tasks by Status',
+        color='Status',
+        color_discrete_map=colors
+    )
+
+    fig.update_layout(showlegend=False, height=400)
+    fig.update_traces(texttemplate='%{y}', textposition='outside')
+
+    st.plotly_chart(fig, use_container_width=True)
+
+
+def show_experiment_status_chart(experiments):
+    """Display experiment status distribution chart."""
+
+    if not experiments:
+        st.info("No experiments to display")
+        return
+
+    # Count experiments by status
+    status_counts = {}
+    for exp in experiments:
+        status = exp.get('status', 'unknown')
+        status_counts[status] = status_counts.get(status, 0) + 1
+
+    # Create dataframe
+    df = pd.DataFrame(list(status_counts.items()), columns=['Status', 'Count'])
+
+    # Status labels
+    status_labels = {
+        'planned': 'Planned',
+        'in_progress': 'In Progress',
+        'completed': 'Completed',
+        'cancelled': 'Cancelled',
+        'validated': 'Validated'
+    }
+    df['Status'] = df['Status'].map(status_labels)
+
+    # Colors
+    colors = {
+        'Planned': '#FFF3E0',
+        'In Progress': '#E3F2FD',
+        'Completed': '#E8F5E9',
+        'Cancelled': '#FFEBEE',
+        'Validated': '#F3E5F5'
+    }
+
+    # Create bar chart
+    fig = px.bar(
+        df,
+        x='Status',
+        y='Count',
+        title='Experiments by Status',
         color='Status',
         color_discrete_map=colors
     )
@@ -353,9 +414,11 @@ def main():
     stats = get_dashboard_stats()
     projects = get_all_projects()
     tasks = get_all_tasks()
+    exp_stats = get_experiment_stats()
+    experiments = get_all_experiments()
 
     # KPI Cards
-    show_kpi_cards(stats)
+    show_kpi_cards(stats, exp_stats)
 
     st.markdown("---")
 
@@ -377,6 +440,14 @@ def main():
         show_priority_distribution(tasks)
 
     with col2:
+        show_experiment_status_chart(experiments)
+
+    st.markdown("---")
+
+    # Statistics summary
+    col1, col2 = st.columns(2)
+
+    with col1:
         st.markdown("### 📊 General Statistics")
         st.markdown(f"**Total projects:** {stats.get('total_projects', 0)}")
         st.markdown(f"**Total subprojects:** {stats.get('total_subprojects', 0)}")
@@ -388,6 +459,15 @@ def main():
         # Progress bar
         completion = stats.get('completion_rate', 0) / 100
         st.progress(completion, text=f"Overall progress: {stats.get('completion_rate', 0):.1f}%")
+
+    with col2:
+        st.markdown("### 🧪 Experiment Statistics")
+        st.markdown(f"**Total experiments:** {exp_stats.get('total', 0)}")
+        st.markdown(f"**Planned:** {exp_stats.get('planned', 0)}")
+        st.markdown(f"**In progress:** {exp_stats.get('in_progress', 0)}")
+        st.markdown(f"**Completed:** {exp_stats.get('completed', 0)}")
+        st.markdown(f"**Validated:** {exp_stats.get('validated', 0)}")
+        st.markdown(f"**Cancelled:** {exp_stats.get('cancelled', 0)}")
 
     st.markdown("---")
 
