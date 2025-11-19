@@ -60,6 +60,7 @@ export function RichTextEditor({
     ],
     content,
     editable: !readOnly,
+    immediatelyRender: false,
     onUpdate: ({ editor }) => {
       onChange?.(editor.getJSON())
     },
